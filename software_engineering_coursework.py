@@ -13,6 +13,7 @@ class My_Time_Planner():
 
     def create_tasks_diary(self, task_name, scheduled_time, location):
         # Check if the task with the same name already exists
+        #considering keeping the records of tasks in a json file
         for task in self.tasks:
             if task['task'] == task_name:
                 # Update the existing task entry
@@ -23,18 +24,8 @@ class My_Time_Planner():
         # If the task does not exist, create a new entry
         self.tasks.append({'task': task_name, 'time': scheduled_time, 'location': location})
 
-    def set_current_location(self, location):
-        #
-        self.current_location = location
-    
-    def determine_distance_to_taskLocation(self, task_location):
-        if self.current_location:
-            distance = geopy.distance.distance(task_location, self.current_location).km
-            return distance
-        return None
-
     def check_time_to_event(self):
-        #please readjust this method as well to work
+        #may be the distance to event location should be ignored at this point
         current_time = datetime.now()
         for task in self.tasks:
             task_time = datetime.strptime(task['time'], "%Y-%m-%d %H:%M")
@@ -51,9 +42,36 @@ class My_Time_Planner():
             else:
                 if current_time > task_time - timedelta(minutes=15):
                     self.provide_updates(f"Upcoming task: {task['task']} at {task['time']}", timedelta(seconds=1))
+    def provide_notifications(self, message, delay=timedelta(seconds=0)):
+        s = sched.scheduler(time.time, time.sleep)
+        s.enter(delay.total_seconds(), 1, print, argument=(message,))
+        s.run()
+
+    def set_current_location(self, location):
+        self.current_location = location
+
+    def determine_distance_to_taskLocation(self, task_location):
+        # Fetch the task location from the tasks list
+        for task in self.tasks:
+            if task['location'] == task_location:
+                # Try to geocode the task location
+                try:
+                    task_geocode = self.geolocator.geocode(task_location)
+                    if task_geocode:
+                        task_coordinates = (task_geocode.latitude, task_geocode.longitude)
+                        current_coordinates = self.current_location
+                        if current_coordinates:
+                            distance = geopy.distance.distance(task_coordinates, current_coordinates).km
+                            return distance
+                except GeocoderTimedOut:
+                    print("Geocoding service timed out. Unable to determine distance.")
+                    return None
+
+        print(f"Location '{task_location}' not found or could not be geocoded.")
+        return None
+            
 
     def monitor_location(self, interval=60):
-        #this method is still not working, work
         while True:
             try:
                 location = self.get_current_gps_location()
@@ -65,15 +83,12 @@ class My_Time_Planner():
 
     def get_current_gps_location(self):
         # Use geopy to get current GPS coordinates
-        current_location = self.geolocator.geocode("my location")
+        current_location = self.geolocator.geocode("Manchester, Greater Manchester, England, United Kingdom")
         if current_location:
             return (current_location.latitude, current_location.longitude)
         return None
 
-    def provide_updates(self, message, delay=timedelta(seconds=0)):
-        s = sched.scheduler(time.time, time.sleep)
-        s.enter(delay.total_seconds(), 1, print, argument=(message,))
-        s.run()
+
     
     def check_schedule(self):
         # Sort tasks by scheduled time before printing
@@ -84,7 +99,7 @@ class My_Time_Planner():
             print(f"Task: {task['task']}, Time: {task['time']}, Location: {task['location']}")
 
     def advise_on_routesToTasklocation(self):
-        #integrate google maps API to provide route directions 
+        # Integrate Google Maps API to provide route directions
         pass
 
     def cleanUp(self):
@@ -113,7 +128,18 @@ def main():
 
     # After adding tasks, print the list of tasks organized by scheduled time
     p.check_schedule()
-    #p.check_time_to_event()    -- needs further code readjustments for this step to work
+
+    # Fetch current GPS location (provide a more specific location)
+    current_gps_location = p.get_current_gps_location()
+    if current_gps_location:
+        p.set_current_location(current_gps_location)
+
+    # Calculate distance to a specific task location (e.g., "Manchester")
+    task_location = "Manchester, Greater Manchester, England, United Kingdom"  # Example: Provide a more specific task location
+    p.determine_distance_to_taskLocation(task_location)
+
+    # Check time to events based on the current location and task distances
+    p.check_time_to_event()
 
 if __name__ == "__main__":
     main()

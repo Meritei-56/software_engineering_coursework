@@ -1,19 +1,18 @@
-from software_engineering_coursework import My_Time_Planner  # Import your My_Time_Planner class here
 
-def main():
-    # Initialize My_Time_Planner instance
-    time_planner = My_Time_Planner()
+#running tests
+# importing geopy library
+from geopy.geocoders import Nominatim
 
-    # Add tasks using create_tasks_diary method
-    time_planner.create_tasks_diary("Meeting", "2024-05-10 15:00", "Office")
-    time_planner.create_tasks_diary("Lunch", "2024-05-11 12:30", "Restaurant")
-    time_planner.create_tasks_diary("Gym", "2024-05-12 18:00", "Fitness Center")
+# calling the Nominatim tool
+loc = Nominatim(user_agent="GetLoc")
 
-    # Print the list of tasks
-    print("List of Tasks:")
-    for task in time_planner.tasks:
-        print(f"Task: {task['task']}, Time: {task['time']}, Location: {task['location']}")
+# entering the location name
+getLoc = loc.geocode("Manchester")
 
-if __name__ == "__main__":
-    main()
+# printing address
+print(getLoc.address)
+
+# printing latitude and longitude
+print("Latitude = ", getLoc.latitude, "\n")
+print("Longitude = ", getLoc.longitude)
 
