@@ -4,6 +4,7 @@ import sched
 import time
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut
+import json
 
 class My_Time_Planner():
     def __init__(self):
@@ -11,21 +12,35 @@ class My_Time_Planner():
         self.current_location = None
         self.geolocator = Nominatim(user_agent="my_time_planner")
 
+
     def create_tasks_diary(self, task_name, scheduled_time, location):
         # Check if the task with the same name already exists
-        #considering keeping the records of tasks in a json file
         for task in self.tasks:
             if task['task'] == task_name:
                 # Update the existing task entry
                 task['time'] = scheduled_time
                 task['location'] = location
+                self.save_tasks_to_file()
                 return
-         
+        
         # If the task does not exist, create a new entry
         self.tasks.append({'task': task_name, 'time': scheduled_time, 'location': location})
+        self.save_tasks_to_file()
+
+    def load_tasks_from_file(self, filename='tasks.json'):
+        try:
+            with open(filename, 'r') as f:
+                self.tasks = json.load(f)
+        except FileNotFoundError:
+            print("No tasks file found. Starting with an empty list.")
+
+    def save_tasks_to_file(self, filename='tasks.json'):
+        with open(filename, 'w') as f:
+            json.dump(self.tasks, f, indent=4)
 
     def check_time_to_event(self):
         #may be the distance to event location should be ignored at this point
+        #remove the distance element and modify the code such that it checks the time to event within every two seconds (for demonstration)
         current_time = datetime.now()
         for task in self.tasks:
             task_time = datetime.strptime(task['time'], "%Y-%m-%d %H:%M")
@@ -43,6 +58,7 @@ class My_Time_Planner():
                 if current_time > task_time - timedelta(minutes=15):
                     self.provide_updates(f"Upcoming task: {task['task']} at {task['time']}", timedelta(seconds=1))
     def provide_notifications(self, message, delay=timedelta(seconds=0)):
+        #modify these method to provide notifications within every 2 seconds
         s = sched.scheduler(time.time, time.sleep)
         s.enter(delay.total_seconds(), 1, print, argument=(message,))
         s.run()
@@ -103,6 +119,7 @@ class My_Time_Planner():
         pass
 
     def cleanUp(self):
+        #modify this method as well to ensure that the code closes appropriately and all records are saved
         pass
 
 
