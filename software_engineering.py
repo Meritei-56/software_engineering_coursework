@@ -1,4 +1,3 @@
-
 from datetime import datetime, timedelta
 import geopy.distance
 import sched
@@ -6,9 +5,10 @@ import time
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut
 import json
+import winsound
 
 class My_Time_Planner():
-    def _init_(self):
+    def __init__(self):
         self.tasks = []
         self.current_location = None
         self.geolocator = Nominatim(user_agent="my_time_planner")
@@ -56,33 +56,38 @@ class My_Time_Planner():
             else:
                 if current_time > task_time - timedelta(minutes=15):
                     self.provide_updates(f"Upcoming task: {task['task']} at {task['time']}", timedelta(seconds=1))
-                    
-    def provide_notifications(self, message, delay=timedelta(seconds=0)):
+                    self.sound_alarm()
+
+    def provide_updates(self, message, delay=timedelta(seconds=0)):
         s = sched.scheduler(time.time, time.sleep)
         s.enter(delay.total_seconds(), 1, print, argument=(message,))
         s.run()
+
+    def sound_alarm(self):
+        # Play alarm sound
+        winsound.Beep(1000, 1000)  # Example: 1000 Hz frequency for 1 second duration
 
     def set_current_location(self, location):
         self.current_location = location
 
     def determine_distance_to_taskLocation(self, task_location):
-        for task in self.tasks:
-            if task['location'] == task_location:
-                try:
-                    task_geocode = self.geolocator.geocode(task_location)
-                    if task_geocode:
-                        task_coordinates = (task_geocode.latitude, task_geocode.longitude)
-                        current_coordinates = self.current_location
-                        if current_coordinates:
-                            distance = geopy.distance.distance(task_coordinates, current_coordinates).km
-                            return distance
-                except GeocoderTimedOut:
-                    print("Geocoding service timed out. Unable to determine distance.")
-                    return None
+        try:
+            task_geocode = self.geolocator.geocode(task_location)
+            if task_geocode:
+                task_coordinates = (task_geocode.latitude, task_geocode.longitude)
+                current_coordinates = self.current_location
+                if current_coordinates:
+                    distance = geopy.distance.distance(task_coordinates, current_coordinates).km
+                    return distance
+        except GeocoderTimedOut:
+            print("Geocoding service timed out. Please check your internet connection and try again.")
+            return None
+        except Exception as e:
+            print(f"An error occurred while geocoding the location '{task_location}': {e}")
+            return None
 
         print(f"Location '{task_location}' not found or could not be geocoded.")
         return None
-            
 
     def monitor_location(self, interval=60):
         while True:
@@ -99,7 +104,6 @@ class My_Time_Planner():
         if current_location:
             return (current_location.latitude, current_location.longitude)
         return None
-
 
     def check_schedule(self):
         sorted_tasks = sorted(self.tasks, key=lambda x: datetime.strptime(x['time'], "%Y-%m-%d %H:%M"))
@@ -146,4 +150,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
