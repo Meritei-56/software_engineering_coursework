@@ -6,6 +6,8 @@ from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut
 import json
 
+
+#class for handling Software
 class My_Time_Planner():
     def __init__(self):
         self.tasks = []
