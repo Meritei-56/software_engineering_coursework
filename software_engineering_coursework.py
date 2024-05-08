@@ -121,6 +121,21 @@ class My_Time_Planner():
     def cleanUp(self):
         #modify this method as well to ensure that the code closes appropriately and all records are saved
         pass
+    def delete_task(self, task_name):
+        """
+        Delete a task from the planner.
+
+        Parameters:
+        - task_name: Name of the task to delete.
+        """
+        for task in self.tasks:
+            if task['task'] == task_name:
+                self.tasks.remove(task)
+                self.save_tasks_to_file()
+                print(f"Task '{task_name}' deleted successfully.")
+                return
+        
+        print(f"Task '{task_name}' not found in the planner.")
 
 
 def main():
@@ -157,6 +172,10 @@ def main():
 
     # Check time to events based on the current location and task distances
     p.check_time_to_event()
+
+    # Adding task deletion functionality
+    task_to_delete = input("Enter the name of the task you want to delete: ")
+    p.delete_task(task_to_delete)
 
 if __name__ == "__main__":
     main()
