@@ -40,6 +40,7 @@ class My_Time_Planner():
             json.dump(self.tasks, f, indent=4)
 
     def check_time_to_event(self):
+        #this method is still not working, should be able to notify on remaining minutes or hours to a task's scheduled time
         current_time = datetime.now()
         for task in self.tasks:
             task_time = datetime.strptime(task['time'], "%Y-%m-%d %H:%M")
@@ -100,7 +101,7 @@ class My_Time_Planner():
             time.sleep(interval)
 
     def get_current_gps_location(self):
-        current_location = self.geolocator.geocode("Manchester, Greater Manchester, England, United Kingdom")
+        current_location = self.geolocator.geocode("Manchester, Greater Manchester, England, United Kingdom")#test
         if current_location:
             return (current_location.latitude, current_location.longitude)
         return None
@@ -143,7 +144,7 @@ def main():
     if current_gps_location:
         p.set_current_location(current_gps_location)
 
-    task_location = "Manchester, Greater Manchester, England, United Kingdom"
+    task_location = "Manchester, Greater Manchester, England, United Kingdom" #testing
     p.determine_distance_to_taskLocation(task_location)
 
     p.check_time_to_event()
